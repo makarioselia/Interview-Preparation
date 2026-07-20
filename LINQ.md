@@ -11,7 +11,7 @@
 - [What is **ToLookup** in LINQ, and how is it different from **GroupBy**?](#what-is-tolookup-in-linq-and-how-is-it-different-from-groupby)
 - [How do you perform multiple levels of sorting?](#how-do-you-perform-multiple-levels-of-sorting)
 ## What Is Linq?
-**LINQ (Language Integrated Query)** a feature in .NET that allows querying data from various sources (e.g., collections, databases, XML) using a **uniform query syntax**.  
+**LINQ (Language Integrated Query)** is a feature in .NET that allows querying data from various sources (e.g., collections, databases, XML) using a **uniform query syntax**.  
 
 It eliminates the mismatch between the programming language and database providers by using **a uniform query syntax**.
 
@@ -24,13 +24,10 @@ The Result of Linq Query can be:
 | **Feature**               | **IEnumerable**       | **IQueryable**                                      |
 |---------------------------|-----------------------|-----------------------------------------------------|
 | **Namespace**             | `System.Collections.Generic` | `System.Linq`            |
-| **Execution**             | Deferred but always executed in-memory(client-side).   | Deferred but executed on the data source (e.g., SQL Server).(server-side). |
-| **Query Processing**      | Processes the query in memory after retrieving all data.   | Translates queries into the data source's query language (e.g., SQL). |
-| **Support Lazy Loading**  | No.   | Yes. |
-| **Performance**           | Less efficient for filtering/operations on large datasets. | More efficient because filtering happens at the data source. |     
-| **Purpose**               | In-memory data.  | For querying data from out-of-memory sources like databases. |
+| **Execution**             | Deferred. Executed in memory (client-side).   | Deferred. Executed on the data source (e.g., SQL Server).(server-side). |
+| **Query Processing**      | Processes data after it is already loaded into memory.   | Translates queries into the data source's query language (e.g., SQL). |
+| **Performance**           | Less efficient for large datasets because filtering happens after data retrieval. |  More efficient for large datasets because filtering and sorting happen on the database side.|     
 | **Use Case**              | Small or already-loaded data sets.                         | Large datasets from external data sources.          |                 |
-| **Example**               | Iterating over an in-memory `List<T>` or `Array`.          | Querying a database using Entity Framework or LINQ to SQL. |
 
 ### Example
 ```csharp
@@ -42,10 +39,10 @@ The Result of Linq Query can be:
 ```
 #### Example breakdowns
 - In this example the execution happens only when you call `.ToList()`;
-- this part will run **on server side**  
-  `dbContext.Courses` is translated into a query and executed on the database.   
+- Everything before `AsEnumerable()` remains `IQueryable` and is executed on the database.
+- this part will run **on server side**   
   ```csharp
-  dbContext.Courses
+  dbContext.Courses //translated into a query and executed on the database
   ```
 - this part will run **on client side** 
   ```csharp        
@@ -82,7 +79,7 @@ As you see in previous comparison we can use methods like  `ToList()` in both **
 ## What are the two main syntax styles to write LINQ queries? 
 In LINQ, there are **two main syntaxes** for writing queries:
 
-### 1. **Query Syntax (Query Operators)**  
+### 1. **Query Syntax**  
 - SQL-like syntax.
 - Uses keywords such as `from`, `where`, `select`, `group by`, `order by`, etc.
 - Example:
@@ -102,12 +99,12 @@ In LINQ, there are **two main syntaxes** for writing queries:
   ```
 
 ## What is the difference between **LINQ GroupBy** and **SQL GROUP BY**?
-| **Aspect**              | **LINQ `GroupBy`**                                                                                   | **SQL `GROUP BY`**                                                         |
-|-------------------------|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| **Purpose**             | Groups data into collections of keys and values (key-value pairs).                                   | Groups data for aggregation (e.g., `SUM`, `COUNT`, etc.).                  |
-| **Output**              | Produces a collection of grouped items (an `IGrouping<TKey, TElement>`).                             | Produces aggregated rows as flat data.                                     |
-| **Aggregation**         | Aggregation happens **explicitly** (e.g., calling `.Count()`, `.Sum()`, etc., on the grouped items).  | Aggregation happens **implicitly** (e.g., `COUNT`, `SUM`, etc.).           |
-| **Behavior**            | Returns full groups as objects, which you can further manipulate in C#.                              | Only returns aggregated values as defined in the query.                    |
+| **Aspect**      | **LINQ `GroupBy`**                                                                                    | **SQL `GROUP BY`**                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Purpose**     | Groups data based on a key, where each group contains a key and its related elements.                 | Groups rows based on a key, usually to perform aggregation.                                      |
+| **Aggregation** | Aggregation is performed explicitly (e.g., calling `.Count()`, `.Sum()`, etc., on each group).        | Aggregation is performed directly in the query using functions like `COUNT`, `SUM`, etc. |
+| **Output**      | Returns full groups as objects (`IGrouping<TKey, TElement>`), which can be further manipulated in C#. | Produces a flat result set containing grouped keys and aggregated values.                        |
+
 
 ### **Examples: LINQ vs. SQL**
 
@@ -196,7 +193,7 @@ In LINQ, there are **two main syntaxes** for writing queries:
 | **Purpose**        | Projects each element into a new form, **keeping nested collections as separate**. | Projects each element into a new form and **flattens nested collections** into a single collection. |
 | **Returns**        | A collection of **collections** if the result is a nested structure. | A **single flattened collection** of elements. |
 | **Use Cases**      | Use when you want to **preserve the hierarchy** of collections. | Use when you need to **flatten** multiple collections into one. |
-| **Example**        | `var nested = libraries.Select(l => l.Books); // Returns IEnumerable<IEnumerable<Book>> ` | `var flat = people.SelectMany(p => p.Books); // Returns IEnumerable<Book>` |
+| **Example**        | `var nested = libraries.Select(l => l.Books); // Returns IEnumerable<IEnumerable<Book>> ` | `var flat = libraries.SelectMany(l => l.Books); // Returns IEnumerable<Book>` |
 
 
 ## What is the difference between **First**, **FirstOrDefault**, **Single**, and **SingleOrDefault**?
@@ -211,13 +208,17 @@ Sure! Here is the transposed version of the table:
 ## What is `ToLookup` in LINQ, and how is it different from `GroupBy`?
 **ToLookup** and **GroupBy** in LINQ both group elements based on a key, but they differ in key ways:
 
-| Feature              | **`ToLookup`**                                    | **`GroupBy`**                                      |
-|-----------------------|-----------------------------------------------------|-----------------------------------------------------|
-| **Execution**      | Immediate                                               | Deferred                                                |
-| **Return Type**  | **`ILookup<TKey, TElement>`**.            |  **`IEnumerable<IGrouping<TKey, TElement>>`**. |
-| **Mutability**          | Read-only                              | Allows query transformations |
-| **Best For**            | Key-based access to grouped elements   | Complex grouping with additional processing |
-| **Example Access**      | `lookupGroup['a']`                          | `groupByGroup.Where(g => g.Key == 'a')`|
+
+| Feature           | **ToLookup**              | **GroupBy**                                             |
+| ----------------- | ------------------------- | ------------------------------------------------------- |
+| **Execution**     | Immediate                 | Deferred                                                |
+| **Return Type**   | `ILookup<TKey, TElement>` | `IEnumerable<IGrouping<TKey, TElement>>`                |
+| **Missing Key**   | Returns an empty sequence  | Search returns `null`/`default`          |
+| **Best For**            | Fast lookup by key  | Further LINQ processing before enumeration|
+| **Access by Key** | Direct (`lookup["Even"]`)    | Search with LINQ (`groups.FirstOrDefault(g => g.Key == "Even")`) |
+
+
+
 
 ### Examples
 [ToLookupAndGroupBy](./RelatedDocuments/LINQ/ToLookupAndGroupBy.md)
