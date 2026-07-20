@@ -1,8 +1,7 @@
 # TransactionScopeOption
 ## **What is `TransactionScopeOption` in .NET?**
 
-**`TransactionScopeOption`** is an enum in .NET that determines whether a `TransactionScope` joins an existing transaction, 
-creates a new one, or suppresses transactions. It controls transaction participation when using `TransactionScope`.
+**`TransactionScopeOption`** is a .NET enum that determines how a `TransactionScope` participates in transactions. It specifies whether the scope joins an existing transaction, creates a new one, or executes without a transaction.
 
 
 

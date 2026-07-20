@@ -214,7 +214,7 @@ Here's a comparison:
 ---
 
 ### **3. Explicit Loading**
-- **Definition**: Related data is loaded **manually** on demand by explicitly calling the `Load()` method.
+- **Definition**: Related data is loaded **manually** by explicitly calling the `Load()` method.
 - **Mechanism**: Requires explicitly triggering queries for related data using `Load()`.
 - **Pros**: Provides fine-grained control over what data is loaded.
 - **Cons**: Requires more code and manual management.
@@ -325,9 +325,9 @@ var products = context.Products.AsNoTracking().ToList();  // No tracking
 |-------------------------|-------------------------------------------|--------------------------------------------|
 | **Definition**           | A synchronous method that saves changes to the database. | An asynchronous method that saves changes to the database. |
 | **Thread Blocking**      | Blocks the calling thread until the operation completes. | Does not block the calling thread; allows it to perform other tasks while waiting for the operation to complete. |
-| **Use Case**             | Use in scenarios where the application does not require asynchronous execution, such as console apps or non-scalable tasks. | Use in scenarios where scalability and responsiveness are important, such as web APIs or GUI applications. |
-| **Performance**          | Suitable for simple, single-threaded operations. | Improves scalability by freeing up threads during database I/O operations. |
-| **Syntax**               | No `await` keyword is required.          | Requires `await` keyword with an `async` method. |
+| **Use Case / Performance** | Best for simple or non-scalable applications where blocking the calling thread is acceptable (e.g., console apps). | Best for scalable and responsive applications (e.g., web APIs or GUI apps), improving scalability by freeing up threads during database I/O operations. |
+
+
 
 ---
 
@@ -406,7 +406,7 @@ In this example:
 That is why asynchronous code improves scalability and responsiveness, especially in web applications.
 
 ## What is **Migrations**?
-**Migrations** in Entity Framework are a feature that automatically tracks and applies changes to the database schema, keeping it in sync with the evolving data model.
+**Migrations** in Entity Framework provide a way to track and apply database schema changes as the application's data model evolves.
 
 ### **Generated Migration File**:
 A migration file contains:
@@ -439,8 +439,12 @@ Transactions can be managed automatically by Entity Framework or explicitly usin
 
 ## What is **TransactionScopeOption** in Entity Framework?
 
-**`TransactionScopeOption`** is an enum in .NET that determines whether a `TransactionScope` joins an existing transaction, 
-creates a new one, or suppresses transactions. It controls transaction participation when using `TransactionScope`.  
+**`TransactionScopeOption`** is a .NET enum that determines how a `TransactionScope` participates in transactions. It specifies whether the scope joins an existing transaction, creates a new one, or executes without a transaction.
+
+* **`Required` (default):** Joins an existing ambient transaction if one exists; otherwise, creates a new transaction.
+* **`RequiresNew`:** Always creates a new transaction, even if there is an active ambient transaction.
+* **`Suppress`:** Does not participate in any transaction, even if an ambient transaction exists.
+
 
 **For more detail** [TransactionScopeOption](./RelatedDocuments/EntityFramework/TransactionScopeOption.md)
 
